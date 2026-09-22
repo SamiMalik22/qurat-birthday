@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b2b">
+  <title>Qurat Ul Ain — Birthday Surprise 🎂</title>
+  <meta name="description" content="An interactive birthday experience for Qurat Ul Ain.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%82%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Fixed magical background (stars, nebula, balloons) -->
+  <div class="bg" aria-hidden="true">
+    <div class="nebula nebula-1"></div>
+    <div class="nebula nebula-2"></div>
+    <div class="nebula nebula-3"></div>
+    <div id="stars"></div>
+    <div id="balloons"></div>
+    <div class="rays"></div>
+  </div>
+
+  <!-- Particle / confetti layer -->
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <!-- Music control -->
+  <button id="music-btn" class="music-btn" aria-label="Toggle background music" aria-pressed="false" title="Music">🎵</button>
+
+  <main class="stage">
+
+    <!-- ============ SCENE 1 — MAGICAL OPENING ============ -->
+    <section id="scene-opening" class="scene active">
+      <div class="scene-inner">
+        <h1 class="opening-hey">Hey Qurat Ul Ain...&nbsp;👀</h1>
+        <p class="opening-line">Someone has a little birthday surprise waiting for you.&nbsp;🎂✨</p>
+        <button class="btn btn-start" id="open-btn">LET'S BEGIN ✨</button>
+      </div>
+    </section>
+
+    <!-- ============ SCENE 2 — BIRTHDAY COUNTDOWN ============ -->
+    <section id="scene-countdown" class="scene">
+      <div class="scene-inner">
+        <h2 class="scene-title">Qurat Ul Ain's Birthday&nbsp;🎂</h2>
+        <p class="date-line">25 September 2026</p>
+
+        <div id="cd-wrap">
+          <div class="countdown-card">
+            <div class="cd-units">
+              <div class="cd-unit"><span class="cd-num" id="cd-days">00</span><span class="cd-label">DAYS</span></div>
+              <span class="cd-sep">:</span>
+              <div class="cd-unit"><span class="cd-num" id="cd-hours">00</span><span class="cd-label">HOURS</span></div>
+              <span class="cd-sep">:</span>
+              <div class="cd-unit"><span class="cd-num" id="cd-mins">00</span><span class="cd-label">MINUTES</span></div>
+              <span class="cd-sep">:</span>
+              <div class="cd-unit"><span class="cd-num" id="cd-secs">00</span><span class="cd-label">SECONDS</span></div>
+            </div>
+          </div>
+          <p id="cd-slogan" class="cd-slogan">Your special day is getting closer...&nbsp;✨</p>
+          <p id="cd-byline" class="cd-byline">Get ready...&nbsp;🎉</p>
+        </div>
+
+        <div id="bd-reveal" hidden>
+          <h2 class="bd-headline">IT'S YOUR BIRTHDAY!&nbsp;🎉🎂</h2>
+          <p class="cd-slogan today-line">Let's make something delicious.</p>
+        </div>
+
+        <button class="btn btn-primary" id="make-cake-btn" data-music="1">MAKE MY CAKE 🎂</button>
+      </div>
+    </section>
+
+    <!-- ============ SCENE 3 — CAKE BUILDER ============ -->
+    <section id="scene-cake" class="scene">
+      <div class="scene-inner builder-layout">
+        <div class="builder-left">
+          <h2 class="scene-title">Let's Make Your Birthday Cake&nbsp;🎂</h2>
+          <p class="subtitle">You are the baker today.&nbsp;👩‍🍳✨</p>
+          <div id="cake-preview" class="cake-preview" aria-label="Your birthday cake preview"></div>
+          <p id="cake-praise" class="cake-praise" hidden>Your cake is looking AMAZING.&nbsp;😭🎂</p>
+        </div>
+
+        <div class="builder-right" aria-live="polite">
+          <!-- Step 1 -->
+          <div class="step" id="step-0">
+            <h3 class="step-title">Step 1 · Choose your cake base</h3>
+            <div class="opts" role="radiogroup" aria-label="Cake base">
+              <button class="opt" role="radio" data-group="base" data-value="vanilla"><span class="opt-emoji">🍰</span><span class="opt-label">Vanilla</span></button>
+              <button class="opt" role="radio" data-group="base" data-value="chocolate"><span class="opt-emoji">🍫</span><span class="opt-label">Chocolate</span></button>
+              <button class="opt" role="radio" data-group="base" data-value="strawberry"><span class="opt-emoji">🍓</span><span class="opt-label">Strawberry</span></button>
+              <button class="opt" role="radio" data-group="base" data-value="blueberry"><span class="opt-emoji">🫐</span><span class="opt-label">Blueberry</span></button>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step" id="step-1" hidden>
+            <h3 class="step-title">Step 2 · Choose your frosting</h3>
+            <div class="opts" role="radiogroup" aria-label="Frosting flavour">
+              <button class="opt" role="radio" data-group="frost" data-value="vanilla-cream"><span class="opt-emoji">🤍</span><span class="opt-label">Vanilla Cream</span></button>
+              <button class="opt" role="radio" data-group="frost" data-value="chocolate"><span class="opt-emoji">🍫</span><span class="opt-label">Chocolate</span></button>
+              <button class="opt" role="radio" data-group="frost" data-value="strawberry"><span class="opt-emoji">💗</span><span class="opt-label">Strawberry</span></button>
+              <button class="opt" role="radio" data-group="frost" data-value="berry"><span class="opt-emoji">💜</span><span class="opt-label">Berry</span></button>
+              <button class="opt" role="radio" data-group="frost" data-value="lemon"><span class="opt-emoji">💛</span><span class="opt-label">Lemon</span></button>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step" id="step-2" hidden>
+            <h3 class="step-title">Step 3 · Add your toppings</h3>
+            <p class="step-hint">Pick as many as you like.</p>
+            <div class="opts" role="group" aria-label="Toppings">
+              <button class="opt" data-group="top" data-value="strawberry" aria-pressed="false"><span class="opt-emoji">🍓</span><span class="opt-label">Strawberries</span></button>
+              <button class="opt" data-group="top" data-value="chocolate" aria-pressed="false"><span class="opt-emoji">🍫</span><span class="opt-label">Chocolate</span></button>
+              <button class="opt" data-group="top" data-value="cherry" aria-pressed="false"><span class="opt-emoji">🍒</span><span class="opt-label">Cherries</span></button>
+              <button class="opt" data-group="top" data-value="blueberry" aria-pressed="false"><span class="opt-emoji">🫐</span><span class="opt-label">Blueberries</span></button>
+              <button class="opt" data-group="top" data-value="sprinkles" aria-pressed="false"><span class="opt-emoji">🍬</span><span class="opt-label">Sprinkles</span></button>
+              <button class="opt" data-group="top" data-value="star" aria-pressed="false"><span class="opt-emoji">✨</span><span class="opt-label">Sugar Stars</span></button>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="step" id="step-3" hidden>
+            <h3 class="step-title">Step 4 · How many candles?</h3>
+            <div class="opts" role="radiogroup" aria-label="Number of candles">
+              <button class="opt opt-candle" role="radio" data-group="candle" data-value="1">🕯️ <span class="opt-label">1</span></button>
+              <button class="opt opt-candle" role="radio" data-group="candle" data-value="3">🕯️ <span class="opt-label">3</span></button>
+              <button class="opt opt-candle" role="radio" data-group="candle" data-value="5">🕯️ <span class="opt-label">5</span></button>
+              <button class="opt opt-candle" role="radio" data-group="candle" data-value="7">🕯️ <span class="opt-label">7</span></button>
+              <button class="opt opt-candle" role="radio" data-group="candle" data-value="9">🕯️ <span class="opt-label">9</span></button>
+            </div>
+            <button class="btn btn-primary action-btn" id="light-candles-btn" hidden>LIGHT THE CANDLES 🕯️</button>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-secondary" id="next-btn" hidden>NEXT →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCENE 4 / 5 — CANDLE LIGHTING + WISH ============ -->
+    <section id="scene-wish" class="scene">
+      <div class="scene-inner wish-stage" id="wish-stage">
+        <div class="wish-cake-wrap">
+          <div id="wish-cake" class="cake-preview" aria-label="Your birthday cake with candles"></div>
+        </div>
+
+        <div id="wish-pre" class="wish-text">
+          <p class="ghost-line">One last thing...</p>
+          <h2 class="wish-title">Make a wish.&nbsp;✨</h2>
+          <button class="btn btn-warm" id="light-btn">LIGHT THE CANDLES 🕯️</button>
+        </div>
+
+        <div id="wish-middle" class="wish-text" hidden>
+          <p class="ghost-line">Okay... make your wish.&nbsp;✨</p>
+          <p class="soft-line">Ready?</p>
+          <button class="btn btn-warm" id="wish-btn">I MADE MY WISH ✨</button>
+        </div>
+
+        <div id="wish-done" class="wish-text" hidden>
+          <h2 class="wish-sent">WISH SENT.&nbsp;✨</h2>
+          <p class="soft-line">Now there's only one thing left...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCENE 6 — MYSTERY GIFT ============ -->
+    <section id="scene-gift" class="scene">
+      <div class="scene-inner gift-stage">
+        <p class="ghost-line" id="gift-t1">Wait...&nbsp;👀</p>
+        <p class="soft-line reveal-delay-1">You made your cake.</p>
+        <p class="soft-line reveal-delay-2">You made your wish.</p>
+        <p class="soft-line reveal-delay-3">But there's still one thing...</p>
+
+        <div class="gift-wrap reveal-delay-4">
+          <div class="gift" id="gift">
+            <div class="gift-light" aria-hidden="true"></div>
+            <div class="gift-lid">
+              <span class="ribbon-h" aria-hidden="true"></span>
+            </div>
+            <div class="gift-body">
+              <span class="ribbon-v" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary reveal-delay-4" id="open-gift-btn" data-music="1">OPEN YOUR GIFT 🎁</button>
+
+        <div id="gift-reveal" class="gift-reveal" hidden>
+          <h2 class="bd-headline">🎉 HAPPY BIRTHDAY, QURAT UL AIN! 🎉</h2>
+          <p class="reveal-line">Today is completely yours.</p>
+          <p class="reveal-line">Make a wish.</p>
+          <p class="reveal-line">Eat the cake.</p>
+          <p class="reveal-line">Enjoy the little things.</p>
+          <p class="reveal-line">And most importantly...</p>
+          <p class="reveal-line big">SMILE.&nbsp;🌷✨</p>
+          <p class="gift-hope">Hope your day is filled with happiness, laughter, good food and lots of beautiful moments.&nbsp;🎂💫</p>
+          <button class="btn btn-primary action-btn" id="to-final-btn">ONWARDS ✨</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCENE 7 — FINAL CELEBRATION ============ -->
+    <section id="scene-final" class="scene">
+      <div class="scene-inner final-stage" id="final-stage">
+        <h1 class="final-title">Happy Birthday!&nbsp;🎂🎉</h1>
+        <h2 class="final-name">Qurat Ul Ain&nbsp;🌷</h2>
+        <p class="final-date">25 September 2026</p>
+        <div id="final-cake-wrap" class="cake-preview final-cake" aria-label="Your birthday cake, candles lit"></div>
+        <button class="btn btn-ghost" id="replay-btn">START AGAIN 🎂</button>
+      </div>
+    </section>
+
+  </main>
+
+  <noscript>
+    <p style="color:#fff;padding:20px;text-align:center;">Please enable JavaScript to experience the birthday surprise. 🌷</p>
+  </noscript>
+
+  <script src="script.js"></script>
+</body>
+</html>
