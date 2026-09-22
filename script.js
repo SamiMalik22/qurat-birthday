@@ -162,7 +162,7 @@
       var t0 = performance.now();
       var step = function (now) {
         var k = Math.min(1, (now - t0) / (dur || 2000));
-        a.volume = from + (target - from) * (k * (2 - k));
+        a.volume = Math.max(0, Math.min(1, from + (target - from) * (k * (2 - k))));
         if (k < 1) requestAnimationFrame(step);
       };
       requestAnimationFrame(step);
@@ -263,8 +263,8 @@
   }
 
   /* ---------------- Background decorations ---------------- */
-  function buildStars() {
-    var host = $('#stars');
+  function buildStars(host) {
+    if (!host) return;
     var count = reduceMotion ? 18 : 42;
     for (var i = 0; i < count; i++) {
       var s = document.createElement('span');
@@ -1240,10 +1240,90 @@
     });
   }
 
+  /* ---------------- Password gate (UI/content lock only) ---------------- */
+  var gate = $('#gate');
+  var gateInput = $('#gate-input');
+  var gateToggle = $('#gate-toggle');
+  var gateUnlock = $('#gate-unlock');
+  var gateError = $('#gate-error');
+  var gateCard = gate ? gate.querySelector('.gate-card') : null;
+  var gateOpen = false;
+
+  // Compare against the secret code, case-insensitively.
+  function gateCodeMatches(raw) {
+    return (raw || '').trim().toLowerCase() === '25-sep';
+  }
+
+  function gateShake() {
+    if (!gateCard) return;
+    gateCard.classList.remove('shake');
+    void gateCard.offsetWidth;
+    gateCard.classList.add('shake');
+  }
+
+  function tryUnlock() {
+    if (gateOpen || !gateInput) return;
+    SFX.init();
+    if (gateCodeMatches(gateInput.value)) {
+      unlockGate();
+    } else {
+      SFX.tone(200, 0.22, 'sine', 0.045);
+      if (gateError) gateError.hidden = false;
+      gateShake();
+      gateInput.value = '';
+      gateInput.focus();
+    }
+  }
+
+  function unlockGate() {
+    if (gateOpen) return;
+    gateOpen = true;
+    if (gateError) gateError.hidden = true;
+    SFX.chime();
+    document.body.classList.remove('locked');
+    if (gate) {
+      gate.classList.add('leaving');
+      gate.setAttribute('aria-hidden', 'true');
+      later(function () {
+        if (gate) gate.hidden = true;
+        if (gateInput) gateInput.value = '';
+        var openBtn = $('#open-btn');
+        if (openBtn) openBtn.focus();
+      }, 750);
+    }
+  }
+
+  function initGate() {
+    buildStars($('#gate-stars'));
+    if (!gate || !gateInput || !gateUnlock) {
+      document.body.classList.remove('locked');
+      return;
+    }
+    gateUnlock.addEventListener('click', tryUnlock);
+    gateInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); tryUnlock(); }
+    });
+    gateInput.addEventListener('input', function () {
+      if (gateError && !gateError.hidden) gateError.hidden = true;
+    });
+    if (gateToggle) {
+      gateToggle.addEventListener('click', function () {
+        if (!gateInput) return;
+        var showing = gateInput.type === 'text';
+        gateInput.type = showing ? 'password' : 'text';
+        gateToggle.textContent = showing ? 'SHOW' : 'HIDE';
+        gateToggle.setAttribute('aria-pressed', showing ? 'false' : 'true');
+        gateInput.focus();
+      });
+    }
+    gateInput.focus();
+  }
+
   /* ---------------- Init ---------------- */
   function init() {
+    initGate();
     Music.init();
-    buildStars();
+    buildStars($('#stars'));
     buildBalloons();
 
     // delegation for option buttons (builder + decoration)

@@ -7,6 +7,8 @@
 /* ---------- Reset & base ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html { overflow-x: hidden; }
+
 html, body { height: 100%; }
 
 body {
@@ -1143,6 +1145,195 @@ body.reduced .surprise-glow { animation-duration: 0.3s; }
   .rays, .nebula, .balloon, .gift-box { animation: none; }
   .cake .candle .flame { animation: none !important; }
   .hold-btn.holding { transition: none; }
+}
+
+/* ============================================================
+   BIRTHDAY PASSWORD GATE (UI/content lock, not cryptography)
+   ============================================================ */
+body.locked { overflow: hidden; }
+
+/* While locked, keep the birthday website out of sight */
+body.locked .stage,
+body.locked .music-btn,
+body.locked .surprise-reveal,
+body.locked #fx { display: none !important; }
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.7s ease, visibility 0s linear 0s;
+}
+.gate.leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.7s ease, visibility 0s linear 0.7s, pointer-events 0s linear 0s;
+}
+.gate[hidden] { display: none !important; }
+
+.gate-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(64, 44, 120, 0.6), transparent 60%),
+    radial-gradient(100% 80% at 85% 100%, rgba(140, 60, 140, 0.32), transparent 55%),
+    radial-gradient(100% 80% at 10% 100%, rgba(30, 90, 150, 0.34), transparent 55%),
+    #0b0b2b;
+}
+#gate-stars { position: absolute; inset: 0; }
+
+.gate-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  padding: 34px 26px 30px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 0 60px rgba(170, 120, 255, 0.22) inset,
+    0 0 44px rgba(236, 72, 153, 0.14),
+    0 0 30px rgba(125, 211, 252, 0.08);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: gateCardIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.gate-card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(130deg, rgba(168, 85, 247, 0.55), rgba(236, 72, 153, 0.45), rgba(125, 211, 252, 0.4), rgba(255, 210, 110, 0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0.8;
+  pointer-events: none;
+}
+@keyframes gateCardIn {
+  from { opacity: 0; transform: translateY(26px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes gateShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 90% { transform: translateX(-3px); }
+  20%, 80% { transform: translateX(5px); }
+  30%, 50%, 70% { transform: translateX(-8px); }
+  40%, 60% { transform: translateX(8px); }
+}
+.gate-card.shake { animation: gateShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+
+.gate-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.2), rgba(168, 85, 247, 0.35) 65%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 6px rgba(255, 226, 138, 0.08), 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 26px rgba(255, 180, 220, 0.35);
+  animation: riseIn 0.7s 0.05s both;
+}
+.gate-title {
+  font-size: clamp(1.35rem, 6vw, 1.9rem);
+  font-weight: 900;
+  line-height: 1.2;
+  background: linear-gradient(90deg, #ffd26e, #ff8ed0, #b5a0ff, #7fd8ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 40px rgba(255, 190, 230, 0.3);
+  animation: riseIn 0.7s 0.18s both;
+}
+.gate-sub {
+  color: #d9ccff;
+  font-size: clamp(0.92rem, 3.2vw, 1.02rem);
+  line-height: 1.45;
+  max-width: 30ch;
+  animation: riseIn 0.7s 0.32s both;
+}
+.gate-field {
+  position: relative;
+  width: 100%;
+  animation: riseIn 0.7s 0.46s both;
+}
+.gate-input {
+  width: 100%;
+  font-size: 1rem;
+  padding: 15px 88px 15px 18px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  letter-spacing: 2px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.gate-input::placeholder { color: rgba(255, 255, 255, 0.4); letter-spacing: 0.5px; }
+.gate-input:focus {
+  border-color: #ff9ad5;
+  box-shadow: 0 0 0 3px rgba(255, 154, 213, 0.28), 0 0 24px rgba(180, 140, 255, 0.4), 0 0 30px rgba(255, 210, 130, 0.2);
+}
+.gate-toggle {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 9px 15px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #efeaff;
+  background: rgba(255, 255, 255, 0.14);
+  transition: background 0.25s ease, transform 0.15s ease;
+}
+.gate-toggle:hover { background: rgba(255, 255, 255, 0.22); }
+.gate-toggle:active { transform: translateY(-50%) scale(0.94); }
+.gate-unlock { width: 100%; animation: riseIn 0.7s 0.6s both, btnPulse 2.6s ease-in-out 1.6s infinite; }
+.gate-error {
+  color: #ffb3c8;
+  font-size: 0.88rem;
+  font-weight: 700;
+  min-height: 1.2em;
+  text-shadow: 0 0 16px rgba(255, 110, 160, 0.4);
+  animation: riseIn 0.4s both;
+}
+body.reduced .gate { transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
+body.reduced .gate-card { animation-duration: 0.3s; }
+body.reduced .gate-card.shake { animation: none; }
+
+/* ---------- Small phones ---------- */
+@media (max-width: 400px) {
+  .scene { padding: 14px 14px calc(28px + env(safe-area-inset-bottom)); }
+  .cake-preview { min-height: 210px; }
+  .cake { transform: scale(0.92); transform-origin: bottom center; }
+  .cd-unit { min-width: 50px; }
+  .music-btn { width: 42px; height: 42px; font-size: 18px; top: 12px; right: 12px; }
+  .gift-row { gap: 9px; }
+  .gift-box { width: 62px; height: 76px; font-size: 26px; }
+  .gate { padding: 18px 14px calc(18px + env(safe-area-inset-bottom)); }
+  .gate-card { padding: 28px 20px 24px; gap: 14px; }
 }
 
 /* ---------- Small phones ---------- */
