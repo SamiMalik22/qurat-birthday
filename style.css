@@ -1336,13 +1336,443 @@ body.reduced .gate-card.shake { animation: none; }
   .gate-card { padding: 28px 20px 24px; gap: 14px; }
 }
 
-/* ---------- Small phones ---------- */
+/* ============================================================
+   CINEMATIC POLISH LAYER
+   ============================================================ */
+
+/* ---------- Scene transitions: fade + blur + light sweep ---------- */
+.scene {
+  transition: opacity 0.8s ease, transform 0.85s cubic-bezier(0.22, 1, 0.36, 1), filter 0.85s ease, visibility 0s linear 0.85s;
+  filter: blur(9px);
+}
+.scene.active {
+  filter: blur(0);
+  transition: opacity 0.8s ease, transform 0.85s cubic-bezier(0.22, 1, 0.36, 1), filter 0.85s ease, visibility 0s;
+}
+body.reduced .scene { filter: none; }
+
+#sweep {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+}
+#sweep::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: 50%;
+  width: 52vmax;
+  transform: translateX(-160%) rotate(14deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 225, 170, 0.26) 45%, rgba(255, 190, 225, 0.2) 55%, transparent);
+  filter: blur(6px);
+}
+#sweep.run { visibility: visible; animation: sweepFx 1s ease-out forwards; }
+#sweep.run::before { animation: sweepBand 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+@keyframes sweepFx { 0% { opacity: 0; } 12% { opacity: 1; } 46% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes sweepBand { from { transform: translateX(-160%) rotate(14deg); } to { transform: translateX(160%) rotate(14deg); } }
+
+/* ---------- Floating background petals (global) ---------- */
+#petals { position: absolute; inset: 0; pointer-events: none; }
+.petal {
+  position: absolute;
+  width: 11px;
+  height: 15px;
+  border-radius: 70% 30% 70% 30% / 60% 60% 40% 40%;
+  opacity: 0;
+  filter: blur(0.4px);
+  animation: petalFall var(--dur, 12s) linear var(--delay, 0s) infinite;
+}
+@keyframes petalFall {
+  0%   { transform: translate3d(0, -8vh, 0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.6; }
+  88%  { opacity: 0.45; }
+  100% { transform: translate3d(var(--drift, 18px), 110vh, 0) rotate(320deg); opacity: 0; }
+}
+
+/* ---------- Password gate: breathing glow + floats + sequence ---------- */
+.gate-breathe {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(560px, 92vw);
+  height: min(560px, 82vh);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 226, 138, 0.2), rgba(236, 120, 190, 0.11) 40%, transparent 70%);
+  filter: blur(8px);
+  z-index: -1;
+  pointer-events: none;
+  animation: gateBreath 5.5s ease-in-out infinite;
+}
+@keyframes gateBreath {
+  0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1; transform: translate(-50%, -50%) scale(1.07); }
+}
+
+#gate-floats { position: absolute; inset: 0; }
+.fpart {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: fpartFloat var(--dur, 9s) ease-in var(--delay, 0s) infinite;
+}
+@keyframes fpartFloat {
+  0%   { transform: translate3d(0, 12vh, 0); opacity: 0; }
+  15%  { opacity: 0.7; }
+  60%  { opacity: 0.35; }
+  100% { transform: translate3d(var(--dx, 16px), -64vh, 0) rotate(90deg); opacity: 0; }
+}
+
+.gate-intro {
+  font-size: clamp(1.05rem, 3.6vw, 1.25rem);
+  color: #f3e9ff;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.45;
+  max-width: 26ch;
+  opacity: 0;
+  animation: gateIntroIn 0.9s 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.gate-intro.done { opacity: 0; transform: translateY(-8px); }
+@keyframes gateIntroIn { from { opacity: 0; transform: translateY(10px); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
+
+.gate-title {
+  opacity: 0;
+  animation: gateTitleIn 1.1s 1.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes gateTitleIn { from { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(8px); } to { opacity: 1; transform: none; filter: blur(0); } }
+
+.gate-field { animation: gateFieldIn 1s 2.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.gate-unlock { animation: gateFieldIn 1s 2.5s cubic-bezier(0.22, 1, 0.36, 1) both, btnPulse 2.6s ease-in-out 3.4s infinite; }
+@keyframes gateFieldIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+body.reduced .gate-intro,
+body.reduced .gate-title,
+body.reduced .gate-field,
+body.reduced .gate-unlock { animation: none; opacity: 1; }
+
+.gate { transition: opacity 1.05s ease, visibility 0s linear 1.05s; }
+.gate.leaving {
+  transition: opacity 1.05s ease, visibility 0s linear 1.05s;
+  animation: gateFadeOut 1.05s ease forwards;
+}
+@keyframes gateFadeOut { to { opacity: 0; } }
+.gate.leaving .gate-card { animation: gateCardOut 1s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+.gate.leaving .gate-breathe { animation: gateBreatheBurst 1.2s ease-out forwards; }
+.gate.leaving .gate-bg { animation: gateBgFlare 1.2s ease-out forwards; }
+.gate.leaving #gate-stars .star { animation-duration: 0.32s !important; }
+@keyframes gateCardOut { to { opacity: 0; transform: translateY(-26px) scale(0.9); filter: blur(10px); } }
+@keyframes gateBreatheBurst { to { opacity: 0; transform: translate(-50%, -50%) scale(2.4); } }
+@keyframes gateBgFlare { to { filter: brightness(1.7) saturate(1.35); } }
+
+.star { box-shadow: 0 0 8px 1px rgba(255, 255, 255, 0.38); }
+
+/* ---------- Scene 1 — cinematic opening ---------- */
+.opening-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, #060418 0%, #0b0b2b 55%, #110b2d 100%);
+  opacity: 1;
+  transition: opacity 3.4s ease;
+  pointer-events: none;
+}
+.opening-veil.on { opacity: 0; }
+#scene-opening .scene-inner { position: relative; z-index: 2; }
+#scene-opening .opening-line {
+  opacity: 0;
+  filter: blur(8px);
+  animation: lineCinema 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  text-shadow: 0 0 26px rgba(255, 190, 230, 0.4);
+  color: #fbf4ff;
+  font-size: clamp(1.15rem, 4.4vw, 1.5rem);
+  font-weight: 700;
+  max-width: 26ch;
+}
+#scene-opening .opening-line[data-i="1"] { animation-delay: 0.6s; }
+#scene-opening .opening-line[data-i="2"] { animation-delay: 1.6s; }
+#scene-opening .opening-line[data-i="3"] { animation-delay: 2.6s; }
+#scene-opening .btn-start { animation-delay: 3.3s; }
+@keyframes lineCinema { from { opacity: 0; transform: translateY(20px) scale(0.96); filter: blur(10px); } to { opacity: 1; transform: none; filter: blur(0); } }
+body.reduced .opening-veil { transition: none; opacity: 0; }
+body.reduced .opening-line { animation: none; opacity: 1; filter: none; }
+body.reduced #scene-opening .btn-start { animation: none; opacity: 1; }
+
+/* ---------- Scene 4 — magical door ---------- */
+.door-inner::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 44%, rgba(28, 16, 58, 0.25), rgba(5, 3, 16, 0.85) 78%);
+  pointer-events: none;
+}
+.door-inner > * { position: relative; z-index: 1; }
+.door {
+  border-radius: 18px 18px 10px 10px;
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 210, 160, 0.28), 0 0 36px rgba(255, 190, 130, 0.26);
+  animation: doorOutline 3s ease-in-out infinite;
+}
+@keyframes doorOutline {
+  0%, 100% { box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 210, 160, 0.2), 0 0 24px rgba(255, 190, 130, 0.18); }
+  50%      { box-shadow: 0 26px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 220, 170, 0.42), 0 0 46px rgba(255, 200, 150, 0.42); }
+}
+body.reduced .door { animation: none; }
+.door-glow { opacity: 0.3; animation: doorLeak 2.8s ease-in-out infinite; }
+@keyframes doorLeak { 0%, 100% { opacity: 0.16; } 50% { opacity: 0.55; } }
+.door-stage.opening .door-glow { opacity: 1; animation: none; }
+.door-stage.zoom { animation: doorZoom 1.05s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+@keyframes doorZoom { to { transform: scale(2.8); opacity: 0; filter: blur(16px); } }
+body.reduced .door-stage.zoom { animation-duration: 0.001ms; }
+
+/* ---------- Scene 5 — staged cake construction ---------- */
+.cake-preview.staged .cake .plate { opacity: 0; animation: stageRise 0.7s cubic-bezier(0.3, 1.5, 0.6, 1) 0.05s both; }
+.cake-preview.staged .cake .tier-bottom { opacity: 0; animation: stageRise 0.7s cubic-bezier(0.3, 1.5, 0.6, 1) 0.4s both; }
+.cake-preview.staged .cake .tier-mid { opacity: 0; animation: stageRise 0.7s cubic-bezier(0.3, 1.5, 0.6, 1) 0.78s both; }
+.cake-preview.staged .cake .tier-top { opacity: 0; animation: stageRise 0.7s cubic-bezier(0.3, 1.5, 0.6, 1) 1.16s both; }
+.cake-preview.staged .cake .tier .frost { opacity: 0; animation: frostFlow 0.8s cubic-bezier(0.3, 1.4, 0.6, 1) both; }
+.cake-preview.staged .cake .tier-bottom .frost { animation-delay: 0.5s; }
+.cake-preview.staged .cake .tier-mid .frost { animation-delay: 0.92s; }
+.cake-preview.staged .cake .tier-top .frost { animation-delay: 1.34s; }
+.cake-preview.staged .cake .candles { opacity: 0; animation: stageRise 0.7s cubic-bezier(0.3, 1.5, 0.6, 1) 2.3s both; }
+.cake-preview.staged .cake .toppings .topping { animation: toppingDrop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) calc(1.6s + var(--i, 0) * 80ms) both; }
+.cake-preview.staged .cake .decos .deco { animation: decoDrop 0.55s cubic-bezier(0.3, 1.5, 0.5, 1) calc(2s + var(--i, 0) * 90ms) both, decoFloat 2.4s ease-in-out calc(2.3s + var(--i, 0) * -0.2s) infinite alternate; }
+.cake-preview.staged .cake::after { opacity: 0; animation: sheenIn 0.9s ease 2.9s forwards; }
+.cake-preview.staged .cake-banner { opacity: 0; animation: riseIn 0.8s 3s both; }
+@keyframes stageRise { from { opacity: 0; transform: translateY(30px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes frostFlow { from { opacity: 0; transform: translateY(-46px) scaleY(0.35); } to { opacity: 1; transform: none; } }
+@keyframes decoDrop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes sheenIn { to { opacity: 1; } }
+
+/* ---------- Option selection feedback ---------- */
+.opt.selected { animation: selGlow 1s ease-out; }
+@keyframes selGlow {
+  0%   { box-shadow: 0 0 0 2px rgba(255, 154, 213, 0.6), 0 8px 26px rgba(236, 90, 180, 0.35), 0 0 0 0 rgba(255, 170, 220, 0.85); }
+  100% { box-shadow: 0 0 0 2px rgba(255, 154, 213, 0.6), 0 8px 26px rgba(236, 90, 180, 0.35), 0 0 0 18px rgba(255, 170, 220, 0); }
+}
+
+/* ---------- Scene 7 — candle ceremony spotlight ---------- */
+#candles-spotlight {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  --lit: 0;
+  transform: scale(calc(0.82 + var(--lit, 0) * 0.3));
+  background: radial-gradient(ellipse 50% 42% at 50% 46%, rgba(255, 224, 160, 0.5), rgba(255, 190, 120, 0.22) 50%, transparent 72%);
+}
+.candle-stage.dim #candles-spotlight { opacity: 1; }
+.candle-stage.dim::before {
+  background: radial-gradient(ellipse at 50% 55%, rgba(13, 8, 30, calc(0.28 + var(--lit, 0) * 0.28)), rgba(4, 2, 12, calc(0.52 + var(--lit, 0) * 0.38)));
+}
+.cake .candle.lit .flame {
+  animation: flameIn 0.85s cubic-bezier(0.3, 1.4, 0.5, 1) both, flameFlicker 0.5s ease-in-out 0.85s infinite alternate;
+}
+@keyframes flameIn {
+  from { opacity: 0; transform: translateX(-50%) scale(0.2); }
+  to   { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+body.reduced .cake .candle.lit .flame { animation: none; opacity: 1; transform: translateX(-50%) scale(1); }
+
+/* ---------- Scene 8 — magical wish ---------- */
+.wish-orb-wrap { height: 96px; display: flex; align-items: center; justify-content: center; }
+#wish-orb {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 240, 190, 0.95), rgba(255, 190, 110, 0.7) 38%, rgba(255, 130, 160, 0.35) 70%, transparent 78%);
+  box-shadow: 0 0 30px 8px rgba(255, 200, 120, 0.45), 0 0 70px 24px rgba(255, 160, 120, 0.18);
+  animation: orbPulse 4.2s ease-in-out infinite;
+  transition: transform 0.8s cubic-bezier(0.3, 1.4, 0.6, 1), box-shadow 0.8s ease, opacity 1s ease, filter 1s ease;
+}
+.wo-flame {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 16px;
+  height: 24px;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: radial-gradient(circle at 50% 70%, #ffe9a8 0%, #ffb14e 45%, #ff5f2e 75%, rgba(255, 90, 40, 0) 100%);
+  animation: flameFlicker 1.1s ease-in-out infinite alternate;
+  box-shadow: 0 0 16px 6px rgba(255, 190, 80, 0.6);
+}
+@keyframes orbPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+.wish-stage.holding #wish-orb {
+  transform: scale(1.22);
+  box-shadow: 0 0 44px 14px rgba(255, 210, 130, 0.7), 0 0 100px 40px rgba(255, 170, 140, 0.28);
+  animation-duration: 1.6s;
+}
+.wish-stage.holding .wo-flame { animation-duration: 0.5s; }
+.wish-stage.done-flash #wish-orb { animation: none; transform: scale(0.4); opacity: 0; filter: blur(8px); }
+.wish-stage.blazing #wish-orb { animation: none; transform: scale(1.5); box-shadow: 0 0 60px 20px rgba(255, 220, 150, 0.85); }
+.wish-stage::before {
+  background: radial-gradient(ellipse at 50% 58%, rgba(255, 170, 90, 0.2), transparent 60%);
+}
+.wish-stage.holding::before {
+  background: radial-gradient(ellipse at 50% 58%, rgba(26, 14, 46, 0.52), rgba(7, 4, 18, 0.6) 74%);
+}
+
+.hold-ring-wrap { position: relative; display: flex; justify-content: center; margin: 0 auto; }
+.hold-ring {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 12px);
+  border-radius: 999px;
+  background: conic-gradient(from -90deg, #ffe28a var(--p, 0deg), rgba(255, 255, 255, 0.1) var(--p, 0deg));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  pointer-events: none;
+  opacity: 0.85;
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+.wish-stage.holding .hold-ring { opacity: 1; filter: drop-shadow(0 0 6px rgba(255, 210, 130, 0.8)); }
+
+/* ---------- Scene 9 — mystery gifts ---------- */
+.gift-box { box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 26px rgba(255, 255, 255, 0.07); }
+.gift-box::after {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 32px;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 210, 140, 0.38), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.gift-box:hover::after, .gift-box:focus-visible::after { opacity: 0.8; }
+.gift-box.dimmed { opacity: 0.22; transform: scale(0.88); animation: none; filter: blur(1px); }
+.gift-box.selected {
+  transform: scale(1.4);
+  opacity: 1;
+  animation: none;
+  box-shadow: 0 0 0 4px rgba(255, 225, 150, 0.9), 0 22px 60px rgba(255, 200, 120, 0.55), 0 0 60px 20px rgba(255, 190, 120, 0.5);
+}
+.gift-box.selected::after { opacity: 1; }
+.gift-box.selected .gb-emoji { animation: optPop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.gb-ribbon {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95) 30% 70%, transparent);
+  opacity: 0;
+  transform: scaleX(0.2);
+  transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.6, 1) 0.15s, opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+.gift-box.selected .gb-ribbon { opacity: 1; transform: scaleX(1); }
+
+/* ---------- Scene 10 — big reveal ---------- */
+#reveal-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: radial-gradient(circle at 50% 48%, rgba(26, 13, 56, 0.55), rgba(5, 3, 16, 0.96) 70%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1s ease, visibility 0s linear 1s;
+  pointer-events: none;
+}
+#reveal-veil.on { opacity: 1; visibility: visible; transition: opacity 1s ease, visibility 0s; }
+body.reduced #reveal-veil { display: none; }
+.gift-stage > * { position: relative; }
+.reveal-box-wrap { z-index: 1; }
+#reveal-msg { z-index: 21; }
+.reveal-kicker {
+  letter-spacing: 3px;
+  font-weight: 900;
+  font-size: clamp(1.05rem, 4.2vw, 1.4rem);
+  color: #ffe28a;
+  text-shadow: 0 0 30px rgba(255, 210, 110, 0.85);
+  animation: riseIn 0.9s 0.1s both;
+}
+.reveal-name {
+  font-size: clamp(1.45rem, 6vw, 2.2rem);
+  font-weight: 900;
+  color: #ffe8f7;
+  text-shadow: 0 0 30px rgba(255, 150, 210, 0.7);
+  animation: riseIn 0.9s 0.5s both;
+}
+#reveal-msg .bd-headline { animation: revealBd 1.1s 0.3s both; }
+@keyframes revealBd { from { opacity: 0; transform: translateY(16px) scale(0.94); filter: blur(10px); } to { opacity: 1; transform: none; filter: blur(0); } }
+#reveal-msg .gift-hope { animation: riseIn 0.9s 0.85s both; }
+#reveal-msg .action-btn { animation: riseIn 0.9s 1.4s both, btnPulse 2.6s ease-in-out 2.6s infinite; }
+
+/* ---------- Scene 12 — memory keepsake ---------- */
+.memory-card {
+  position: relative;
+  border-color: rgba(255, 210, 150, 0.35);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 44px rgba(255, 190, 120, 0.14) inset, 0 0 60px rgba(255, 190, 120, 0.1);
+  overflow: hidden;
+}
+.memory-card::before {
+  content: "";
+  position: absolute;
+  top: -80%;
+  left: 0;
+  width: 60%;
+  height: 120%;
+  transform: rotate(22deg) translateX(-200%);
+  background: linear-gradient(90deg, transparent, rgba(255, 240, 200, 0.12), transparent);
+  animation: memShimmer 6s ease-in-out infinite;
+}
+@keyframes memShimmer {
+  0%, 62%, 100% { transform: rotate(22deg) translateX(-220%); }
+  30%           { transform: rotate(22deg) translateX(360%); }
+}
+.memory-details p {
+  opacity: 0;
+  animation: riseIn 0.7s both;
+  animation-delay: calc(0.5s + var(--i, 0) * 0.18s);
+}
+.mem-k { color: #e6d9a8; }
+body.reduced .memory-card::before { animation: none; }
+body.reduced .memory-details p { animation: none; opacity: 1; }
+
+/* ---------- Scene 13 — one last surprise ---------- */
+#scene-surprise .btn {
+  animation: riseIn 0.9s 2.2s both, btnWarmPulse 2.2s ease-in-out 2.4s infinite;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 0 40px rgba(255, 170, 100, 0.55), 0 10px 30px rgba(255, 140, 70, 0.4);
+}
+
+/* ---------- Scene 14 — final screen ---------- */
+.final-msg {
+  color: #ffe2c6;
+  font-size: clamp(0.95rem, 3.4vw, 1.15rem);
+  font-weight: 600;
+  font-style: italic;
+  text-shadow: 0 0 22px rgba(255, 190, 140, 0.35);
+  animation: riseIn 1s 0.8s both;
+}
+body.reduced .final-msg { animation: none; opacity: 1; }
+
+/* ---------- Small screens & short viewports ---------- */
 @media (max-width: 400px) {
-  .scene { padding: 14px 14px calc(28px + env(safe-area-inset-bottom)); }
-  .cake-preview { min-height: 210px; }
-  .cake { transform: scale(0.92); transform-origin: bottom center; }
-  .cd-unit { min-width: 50px; }
-  .music-btn { width: 42px; height: 42px; font-size: 18px; top: 12px; right: 12px; }
-  .gift-row { gap: 9px; }
-  .gift-box { width: 62px; height: 76px; font-size: 26px; }
+  .gate-card { padding: 26px 18px 22px; }
+  .gate-intro { font-size: 1rem; }
+  .opening-line { font-size: 1.06rem; }
+  .wish-orb-wrap { height: 76px; }
+  #wish-orb { width: 54px; height: 54px; }
+  .gift-box.selected { transform: scale(1.32); }
+  .hold-ring { top: -5px; height: calc(100% + 10px); }
+}
+@media (max-height: 800px) {
+  .wish-orb-wrap { height: 62px; }
+  #wish-orb { width: 48px; height: 48px; }
+  #wish-orb .wo-flame { display: none; }
 }

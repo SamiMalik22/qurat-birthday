@@ -12,24 +12,26 @@
 <body class="locked">
 
   <!-- Birthday password gate -->
-  <div id="gate" class="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title" aria-describedby="gate-sub">
+  <div id="gate" class="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title" aria-describedby="gate-error">
     <div class="gate-bg" aria-hidden="true">
       <div class="nebula nebula-1"></div>
       <div class="nebula nebula-2"></div>
       <div class="nebula nebula-3"></div>
       <div id="gate-stars"></div>
+      <div id="gate-floats"></div>
       <div class="rays"></div>
     </div>
     <div class="gate-card">
+      <div class="gate-breathe" aria-hidden="true"></div>
       <span class="gate-icon" aria-hidden="true">🎂</span>
-      <h1 class="gate-title" id="gate-title">A Little Birthday Secret ✨</h1>
-      <p class="gate-sub" id="gate-sub">Enter the secret code to unlock the surprise</p>
+      <p class="gate-intro" id="gate-intro">Someone left a little surprise for you…</p>
+      <h1 class="gate-title" id="gate-title">Enter the secret code to unlock it ✨</h1>
       <div class="gate-field">
         <input id="gate-input" class="gate-input" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="text" placeholder="Secret code..." aria-label="Secret code" aria-describedby="gate-error">
         <button type="button" id="gate-toggle" class="gate-toggle" aria-pressed="false">SHOW</button>
       </div>
       <p id="gate-error" class="gate-error" role="alert" hidden>Hmm... that's not the secret code ✨</p>
-      <button type="button" id="gate-unlock" class="btn gate-unlock">UNLOCK ✨</button>
+      <button type="button" id="gate-unlock" class="btn gate-unlock">UNLOCK THE SURPRISE</button>
     </div>
   </div>
 
@@ -40,8 +42,12 @@
     <div class="nebula nebula-3"></div>
     <div id="stars"></div>
     <div id="balloons"></div>
+    <div id="petals"></div>
     <div class="rays"></div>
   </div>
+
+  <!-- Cinematic light sweep on scene changes -->
+  <div id="sweep" aria-hidden="true"></div>
 
   <!-- Particle / confetti layer -->
   <canvas id="fx" aria-hidden="true"></canvas>
@@ -62,9 +68,11 @@
 
     <!-- ============ SCENE 1 — MAGICAL WELCOME ============ -->
     <section id="scene-opening" class="scene active">
+      <div class="opening-veil" id="opening-veil" aria-hidden="true"></div>
       <div class="scene-inner">
-        <h1 class="opening-hey">Hey Qurat Ul Ain...&nbsp;👀</h1>
-        <p class="opening-line">Something special is waiting for you.&nbsp;✨</p>
+        <p class="opening-line" data-i="1">Tonight is a little different…</p>
+        <p class="opening-line" data-i="2">Because someone deserves a beautiful surprise.</p>
+        <p class="opening-line" data-i="3">Ready?</p>
         <button class="btn btn-start" id="open-btn">ENTER THE SURPRISE ✨</button>
       </div>
     </section>
@@ -245,6 +253,7 @@
     <!-- ============ SCENE 7 — CANDLE CEREMONY ============ -->
     <section id="scene-candles" class="scene">
       <div class="scene-inner candle-stage" id="candle-stage">
+        <div id="candles-spotlight" aria-hidden="true"></div>
         <div class="candle-cake-wrap">
           <div id="candles-cake" class="cake-preview" aria-label="Your cake, ready for candles"></div>
         </div>
@@ -254,8 +263,8 @@
           <p class="soft-line">Tap each candle to light it.&nbsp;✨</p>
         </div>
         <div id="candle-done" class="candle-text" hidden>
-          <p class="ghost-line">Beautiful.&nbsp;✨</p>
-          <p class="soft-line">Ready to make your wish?</p>
+          <p class="ghost-line">Make a wish…&nbsp;✨</p>
+          <p class="soft-line">Close your eyes for a moment.</p>
           <button class="btn btn-warm" id="make-wish-btn">MAKE A WISH 🌠</button>
         </div>
       </div>
@@ -265,8 +274,12 @@
     <section id="scene-wish" class="scene">
       <div class="scene-inner wish-stage" id="wish-stage">
         <div id="wish-seqs">
-          <p class="ghost-line" data-s="1">Close your eyes for a second...</p>
-          <p class="soft-line" data-s="2">Think of something you really want.&nbsp;✨</p>
+          <p class="ghost-line" data-s="1">Make a wish…&nbsp;✨</p>
+          <p class="soft-line" data-s="2">Close your eyes for a moment.</p>
+        </div>
+
+        <div class="wish-orb-wrap" aria-hidden="true">
+          <div id="wish-orb"><span class="wo-flame"></span></div>
         </div>
 
         <label class="wish-input-wrap" for="wish-input">
@@ -275,7 +288,10 @@
         </label>
 
         <div id="hold-area">
-          <button class="btn btn-warm hold-btn" id="hold-btn" aria-describedby="hold-hint">HOLD TO MAKE YOUR WISH ✨</button>
+          <div class="hold-ring-wrap">
+            <span class="hold-ring" id="hold-ring" aria-hidden="true"></span>
+            <button class="btn btn-warm hold-btn" id="hold-btn" aria-describedby="hold-hint">HOLD TO MAKE YOUR WISH ✨</button>
+          </div>
           <div class="hold-track" aria-hidden="true"><span id="hold-fill"></span></div>
           <span id="hold-hint" class="sr-only">Press and hold for about two seconds to send your wish.</span>
         </div>
@@ -294,11 +310,11 @@
         <h2 class="scene-title">Choose ONE.</h2>
         <p class="subtitle">Don't overthink it...&nbsp;👀</p>
         <div class="gift-row" id="gift-row">
-          <button class="gift-box gb-1" data-value="🎁" aria-label="Gift box with a present"><span class="gb-emoji">🎁</span></button>
-          <button class="gift-box gb-2" data-value="💝" aria-label="Gift box with a heart"><span class="gb-emoji">💝</span></button>
-          <button class="gift-box gb-3" data-value="✨" aria-label="Gift box with sparkles"><span class="gb-emoji">✨</span></button>
-          <button class="gift-box gb-4" data-value="🌸" aria-label="Gift box with a flower"><span class="gb-emoji">🌸</span></button>
-          <button class="gift-box gb-5" data-value="🌟" aria-label="Gift box with a star"><span class="gb-emoji">🌟</span></button>
+          <button class="gift-box gb-1" data-value="🎁" aria-label="Gift box with a present"><i class="gb-ribbon" aria-hidden="true"></i><span class="gb-emoji">🎁</span></button>
+          <button class="gift-box gb-2" data-value="💝" aria-label="Gift box with a heart"><i class="gb-ribbon" aria-hidden="true"></i><span class="gb-emoji">💝</span></button>
+          <button class="gift-box gb-3" data-value="✨" aria-label="Gift box with sparkles"><i class="gb-ribbon" aria-hidden="true"></i><span class="gb-emoji">✨</span></button>
+          <button class="gift-box gb-4" data-value="🌸" aria-label="Gift box with a flower"><i class="gb-ribbon" aria-hidden="true"></i><span class="gb-emoji">🌸</span></button>
+          <button class="gift-box gb-5" data-value="🌟" aria-label="Gift box with a star"><i class="gb-ribbon" aria-hidden="true"></i><span class="gb-emoji">🌟</span></button>
         </div>
         <p id="gift-picked-note" class="gift-note" hidden>Interesting choice...&nbsp;👀</p>
       </div>
@@ -307,6 +323,7 @@
     <!-- ============ SCENE 10 — GIFT REVEAL ============ -->
     <section id="scene-reveal" class="scene">
       <div class="scene-inner gift-stage">
+        <div id="reveal-veil" aria-hidden="true"></div>
         <div class="reveal-box-wrap" id="reveal-box-wrap">
           <div class="reveal-box" id="reveal-box">
             <span class="reveal-lid" aria-hidden="true"></span>
@@ -316,14 +333,10 @@
         </div>
 
         <div id="reveal-msg" class="gift-reveal" hidden>
-          <h2 class="bd-headline">🎉 HAPPY BIRTHDAY, QURAT UL AIN! 🎉</h2>
-          <p class="reveal-line">Today is completely yours.</p>
-          <p class="reveal-line">Make a wish.</p>
-          <p class="reveal-line">Eat the cake.</p>
-          <p class="reveal-line">Enjoy the little things.</p>
-          <p class="reveal-line">And most importantly...</p>
-          <p class="reveal-line big">SMILE.&nbsp;🌷✨</p>
-          <p class="gift-hope">Hope your day is filled with happiness, laughter, good food and lots of beautiful moments.&nbsp;🎂💫</p>
+          <p class="reveal-kicker">IT'S YOUR DAY ✨</p>
+          <h2 class="bd-headline">HAPPY BIRTHDAY</h2>
+          <p class="reveal-name">Qurat Ul Ain 🌷</p>
+          <p class="gift-hope">Today is completely yours. Make a wish, eat the cake, enjoy the little things… and above all, smile.&nbsp;🌷✨</p>
           <button class="btn btn-primary action-btn" id="celebrate-btn">SHOW TIME 🎊</button>
         </div>
       </div>
@@ -348,13 +361,13 @@
         <div id="memory-card" class="memory-card">
           <div id="memory-cake" class="cake-preview memory-cake" aria-label="Your creation"></div>
           <div class="memory-details">
-            <p><span class="mem-k">Flavour</span><span class="mem-v" id="mem-flavor">—</span></p>
-            <p><span class="mem-k">Frosting</span><span class="mem-v" id="mem-frost">—</span></p>
-            <p><span class="mem-k">Toppings</span><span class="mem-v" id="mem-toppings">—</span></p>
-            <p><span class="mem-k">Candles</span><span class="mem-v" id="mem-candles">—</span></p>
-            <p><span class="mem-k">Message</span><span class="mem-v" id="mem-message">—</span></p>
-            <p><span class="mem-k">Date</span><span class="mem-v" id="mem-date">25 September 2026</span></p>
-            <p><span class="mem-k">For</span><span class="mem-v">Qurat Ul Ain 🌷</span></p>
+            <p style="--i:0"><span class="mem-k">Flavour</span><span class="mem-v" id="mem-flavor">—</span></p>
+            <p style="--i:1"><span class="mem-k">Frosting</span><span class="mem-v" id="mem-frost">—</span></p>
+            <p style="--i:2"><span class="mem-k">Toppings</span><span class="mem-v" id="mem-toppings">—</span></p>
+            <p style="--i:3"><span class="mem-k">Candles</span><span class="mem-v" id="mem-candles">—</span></p>
+            <p style="--i:4"><span class="mem-k">Message</span><span class="mem-v" id="mem-message">—</span></p>
+            <p style="--i:5"><span class="mem-k">Date</span><span class="mem-v" id="mem-date">25 September 2026</span></p>
+            <p style="--i:6"><span class="mem-k">For</span><span class="mem-v">Qurat Ul Ain 🌷</span></p>
           </div>
         </div>
         <div class="mem-actions">
@@ -368,8 +381,7 @@
     <section id="scene-surprise" class="scene">
       <div class="scene-inner surprise-inner">
         <p class="ghost-line" data-s="1">Wait...</p>
-        <p class="soft-line" data-s="2">There's one more thing.&nbsp;👀</p>
-        <p class="soft-line" data-s="3">Ready?</p>
+        <p class="soft-line" data-s="2">There's one more thing.&nbsp;🌷</p>
         <button class="btn btn-warm" id="last-surprise-btn">ONE LAST SURPRISE ✨</button>
       </div>
     </section>
@@ -379,6 +391,7 @@
       <div class="scene-inner final-stage" id="final-stage">
         <h1 class="final-title">HAPPY BIRTHDAY 🎂</h1>
         <h2 class="final-name">Qurat Ul Ain 🌷</h2>
+        <p class="final-msg">May this year bring you countless reasons to smile.&nbsp;🌷</p>
         <p class="final-date">25 September 2026</p>
         <div id="final-cake" class="cake-preview final-cake" aria-label="Your birthday cake, candles lit"></div>
         <div class="final-actions">

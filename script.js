@@ -203,10 +203,26 @@
     }
   };
 
+  var MUSIC_LEVELS = {
+    wish: 0.12,
+    reveal: 0.3,
+    celebration: 0.28,
+    final: 0.16
+  };
+
   /* ---------------- Scenes ---------------- */
   var SCENES = ['opening', 'intro', 'countdown', 'door', 'cake', 'decor', 'candles', 'wish', 'gifts', 'reveal', 'celebration', 'memory', 'surprise', 'final'];
   var sceneEls = {};
   SCENES.forEach(function (k) { sceneEls[k] = $('#scene-' + k); });
+
+  function sweep() {
+    if (reduceMotion) return;
+    var s = $('#sweep');
+    if (!s) return;
+    s.classList.remove('run');
+    void s.offsetWidth;
+    s.classList.add('run');
+  }
 
   function showScene(id) {
     state.scene = id;
@@ -220,11 +236,23 @@
     });
     ambientForScene(id);
     reTriggerSceneEffects(id);
+    sweep();
+    if (!reduceMotion) {
+      burstDot(W / 2, H * 0.45, 9, ['#fff3c4', '#ffd9f2', '#c9d9ff', '#ffe28a']);
+      spawn({
+        type: 'star',
+        x: W * 0.25, y: H * 0.75,
+        vx: 0.6, vy: -1.3,
+        size: 4, life: 1.7, max: 1.7,
+        color: ['#ffe28a', '#ffd9f2', '#c9d9ff'][Math.floor(Math.random() * 3)]
+      });
+    }
+    Music.fadeTo(MUSIC_LEVELS[id] || 0.25, 1400);
   }
 
   /* Re-trigger entrance animations when a scene is shown */
   var REVEAL_SELECTORS = {
-    opening: '.opening-hey, .opening-line, .btn-start',
+    opening: '.opening-line, .btn-start',
     intro: '.intro-line, #scene-intro .btn',
     countdown: '.scene-title, .date-line, .cd-slogan, .cd-byline, .today-line, .bd-headline',
     door: '.ghost-line, #door-open-btn, .door-stage',
@@ -242,6 +270,10 @@
 
   function reTriggerSceneEffects(id) {
     var scene = sceneEls[id];
+    if (id === 'opening') {
+      var veil = $('#opening-veil');
+      if (veil) { veil.classList.remove('on'); void veil.offsetWidth; veil.classList.add('on'); }
+    }
     var sel = REVEAL_SELECTORS[id];
     if (!scene || !sel) return;
     if (id === 'intro') {
@@ -297,6 +329,46 @@
       b.style.setProperty('--dur', (14 + Math.random() * 10).toFixed(1) + 's');
       b.style.setProperty('--delay', (Math.random() * -12).toFixed(1) + 's');
       host.appendChild(b);
+    }
+  }
+
+  var PETAL_COLORS = ['#ffb3d9', '#ff9ad5', '#ffc7e3', '#f7c9e8', '#ffd6ea'];
+  function buildPetals() {
+    var host = $('#petals');
+    if (!host || reduceMotion) return;
+    var count = 9;
+    for (var i = 0; i < count; i++) {
+      var p = document.createElement('span');
+      p.className = 'petal';
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.top = (Math.random() * 100) + '%';
+      p.style.setProperty('--dur', (9 + Math.random() * 8).toFixed(1) + 's');
+      p.style.setProperty('--delay', (Math.random() * -10).toFixed(1) + 's');
+      p.style.setProperty('--drift', (Math.random() * 44 - 22).toFixed(0) + 'px');
+      p.style.background = PETAL_COLORS[i % PETAL_COLORS.length];
+      host.appendChild(p);
+    }
+  }
+
+  function buildFloaters() {
+    var host = $('#gate-floats');
+    if (!host) return;
+    var count = reduceMotion ? 6 : 16;
+    for (var i = 0; i < count; i++) {
+      var f = document.createElement('span');
+      f.className = 'fpart';
+      f.style.left = (Math.random() * 100) + '%';
+      f.style.top = (Math.random() * 100) + '%';
+      f.style.setProperty('--dur', (7 + Math.random() * 9).toFixed(1) + 's');
+      f.style.setProperty('--delay', (Math.random() * -8).toFixed(1) + 's');
+      f.style.setProperty('--dx', (Math.random() * 30 - 15).toFixed(0) + 'px');
+      var s = (Math.random() * 3 + 1).toFixed(1) + 'px';
+      f.style.width = s;
+      f.style.height = s;
+      if (Math.random() < 0.3) f.style.background = '#ffe28a';
+      else if (Math.random() < 0.5) f.style.background = '#ffc7e3';
+      else f.style.background = '#c9d9ff';
+      host.appendChild(f);
     }
   }
 
@@ -399,6 +471,35 @@
     }
   }
 
+  function burstSparks(x, y, count) {
+    for (var i = 0; i < count; i++) {
+      var vx = (Math.random() - 0.5) * 1.4;
+      var vy = -(Math.random() * 2.2 + 0.8);
+      spawn({
+        type: 'dot',
+        x: x, y: y + 6,
+        vx: vx, vy: vy,
+        size: Math.random() * 2.2 + 0.8,
+        life: Math.random() * 0.6 + 0.4, max: 1,
+        color: ['#ffe28a', '#ffd26e', '#fff3c4'][i % 3]
+      });
+    }
+  }
+
+  function petalSpawn() {
+    spawn({
+      type: 'petal',
+      x: Math.random() * W, y: -14,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: Math.random() * 1.2 + 0.6,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.08,
+      size: Math.random() * 5 + 4,
+      life: 5, max: 5,
+      color: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)]
+    });
+  }
+
   function firework(x, y) {
     var colors = ['#ffe28a', '#ff8ed0', '#b5a0ff', '#7fd8ff', '#ff6f91'];
     for (var i = 0; i < 26; i++) {
@@ -473,6 +574,13 @@
           ctx.closePath();
           ctx.fill();
           ctx.restore();
+        } else if (p.type === 'petal') {
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = k * 0.75;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, p.size, p.size * 0.62, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         } else {
           ctx.fillStyle = p.color;
           ctx.beginPath();
@@ -513,10 +621,16 @@
       ambientClear.calls.push(setInterval(function () {
         burstConfetti(Math.random() * W, -10, 12);
         if (Math.random() < 0.5) burstHearts(Math.random() * W, -20, 3);
+        if (Math.random() < 0.6) petalSpawn();
       }, 700));
       ambientClear.calls.push(setInterval(function () {
         firework(Math.random() * W * 0.8 + W * 0.1, Math.random() * H * 0.4);
       }, 1700));
+    } else if (sceneId === 'memory') {
+      ambientClear.calls.push(setInterval(function () { petalSpawn(); }, 650));
+      ambientClear.calls.push(setInterval(function () {
+        burstDot(Math.random() * W, -8, 1, ['#ffb3d9', '#fff3c4', '#c9d9ff']);
+      }, 500));
     } else if (sceneId === 'surprise') {
       ambientClear.calls.push(setInterval(function () {
         burstStars(Math.random() * W, -8, 6);
@@ -704,6 +818,40 @@
     cake.classList.add('pop');
   }
 
+  function stageCake(host) {
+    if (!host || reduceMotion) return;
+    var cake = host.querySelector('.cake');
+    if (!cake) return;
+    host.classList.add('staged');
+    animateCakeConstruction(host);
+    later(function () { host.classList.remove('staged'); }, 3400);
+  }
+
+  function animateCakeConstruction(host) {
+    var steps = [
+      [80, 'plate', 4],
+      [460, 'tier-bottom', 4],
+      [840, 'tier-mid', 4],
+      [1220, 'tier-top', 5],
+      [1580, 'frost', 6],
+      [2280, 'toppings', 5],
+      [2680, 'decos', 5],
+      [2980, 'candles', 8]
+    ];
+    var base = host.getBoundingClientRect();
+    var cake = host.querySelector('.cake');
+    var baseRect = cake ? cake.getBoundingClientRect() : base;
+    steps.forEach(function (step) {
+      later(function () {
+        var el = host.querySelector('.' + step[1]);
+        var r = el ? el.getBoundingClientRect() : baseRect;
+        var cx = r ? (r.left + r.width / 2) : (baseRect.left + baseRect.width / 2);
+        var cy = r ? (r.top + r.height / 2) : (baseRect.top + baseRect.height / 2);
+        burstDot(cx, cy, step[2], ['#fff3c4', '#ffd9f2', '#ffb3d9', '#ffe28a']);
+      }, step[0] + 260);
+    });
+  }
+
   /* ---------------- Cake builder (scene 5) ---------------- */
   var builderPreview = $('#cake-preview');
   var nextBtn = $('#next-btn');
@@ -744,6 +892,10 @@
   }
 
   function selectInGroup(group, value, btn) {
+    if (builderPreview) builderPreview.classList.remove('staged');
+    if (decorPreview) decorPreview.classList.remove('staged');
+    var br = btn.getBoundingClientRect();
+    burstDot(br.left + br.width / 2, br.top + br.height / 2, 6, ['#ffd26e', '#ff8ed0', '#7fd8ff', '#fff3c4']);
     if (group === 'top' || group === 'deco') {
       var arr = group === 'top' ? state.toppings : state.decorations;
       var idx = arr.indexOf(value);
@@ -842,10 +994,12 @@
   }
 
   function initBuilder() {
+    if (builderPreview) builderPreview.classList.remove('staged');
     showStep(Math.min(state.builderStep, 2));
     syncSelectionUI();
     renderCake(builderPreview);
     candleBtn.disabled = !(state.candles > 0);
+    stageCake(builderPreview);
   }
 
   /* ---------------- Candle ceremony (scene 7) ---------------- */
@@ -864,7 +1018,17 @@
     }) + bannerHTML();
     candlePre.hidden = false;
     candleDone.hidden = true;
+    refreshSpotlight();
     later(function () { if (state.scene === 'candles') candleStage.classList.add('dim'); }, 500);
+  }
+
+  function refreshSpotlight() {
+    var stage = $('#candle-stage');
+    if (!stage || !candlesCake) return;
+    var cs = candlesCake.querySelectorAll('.candle');
+    var ls = candlesCake.querySelectorAll('.candle.lit').length;
+    var tot = cs.length;
+    stage.style.setProperty('--lit', tot ? (ls / tot).toFixed(2) : '0');
   }
 
   function lightOneCandle(btn) {
@@ -873,7 +1037,9 @@
     candle.classList.add('lit');
     SFX.candle(0);
     var r = candle.getBoundingClientRect();
+    burstSparks(r.left + r.width / 2, r.top, 10);
     burstStars(r.left + r.width / 2, r.top, 5);
+    refreshSpotlight();
     checkAllLit();
   }
 
@@ -882,6 +1048,7 @@
     var lit = candlesCake.querySelectorAll('.candle.lit').length;
     if (lit >= candles.length && candles.length > 0) {
       state.allLit = true;
+      refreshSpotlight();
       candlePre.hidden = true;
       candleDone.hidden = false;
       SFX.chime();
@@ -893,6 +1060,7 @@
   var wishStage = $('#wish-stage');
   var holdBtn = $('#hold-btn');
   var holdFill = $('#hold-fill');
+  var holdRing = $('#hold-ring');
   var holdArea = $('#hold-area');
   var wishInput = $('#wish-input');
   var wishSentBlock = $('#wish-sent-block');
@@ -903,13 +1071,20 @@
   var holdProgress = 0;
   var wishComplete = false;
 
+  function setHoldRing(k) {
+    if (holdRing) holdRing.style.setProperty('--p', (k * 360).toFixed(1) + 'deg');
+  }
+
   function holdStop() {
+    if (wishComplete) return;
     if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
     holdActive = false;
     holdStart = 0;
     holdProgress = 0;
     if (holdFill) holdFill.style.width = '0%';
+    setHoldRing(0);
     if (holdBtn) holdBtn.classList.remove('holding');
+    if (wishStage) wishStage.classList.remove('holding');
     if (holdBtn && !wishComplete) { holdBtn.disabled = false; }
   }
 
@@ -920,19 +1095,24 @@
     holdStart = performance.now();
     holdProgress = 0;
     holdBtn.classList.add('holding');
+    if (wishStage) wishStage.classList.add('holding');
     var stepNow = function () {
       if (!holdActive) return;
       var k = Math.min(1, (performance.now() - holdStart) / HOLD_MS);
       holdProgress = k;
       if (holdFill) holdFill.style.width = (k * 100).toFixed(1) + '%';
+      setHoldRing(k);
       if (k < 1) {
-        if (Math.random() < 0.3) {
+        if (Math.random() < 0.5) {
+          var ang = Math.random() * Math.PI * 2;
+          var rad = (W > 520 ? 120 : 74) + Math.random() * 40;
           spawn({
             type: 'star', inward: true,
-            x: Math.random() * W, y: Math.random() * H,
+            x: W / 2 + Math.cos(ang) * rad,
+            y: H * 0.42 + Math.sin(ang) * rad * 0.45,
             tx: W / 2, ty: H * 0.42,
-            vx: 0, vy: 0, size: 4, life: 1.2, max: 1.2,
-            color: ['#fff3c4', '#ffd9f2', '#c9d9ff'][Math.floor(Math.random() * 3)]
+            vx: 0, vy: 0, size: 3.6, life: 1.3, max: 1.3,
+            color: ['#fff3c4', '#ffd9f2', '#ffe28a'][Math.floor(Math.random() * 3)]
           });
         }
       } else {
@@ -952,23 +1132,30 @@
     holdBtn.classList.remove('holding');
     holdBtn.disabled = true;
     if (holdFill) holdFill.style.width = '100%';
-    wishStage.classList.remove('warm');
-    wishStage.classList.add('blazing');
+    setHoldRing(1);
+    wishStage.classList.remove('holding', 'warm');
+    wishStage.classList.add('done-flash');
     SFX.celebrate();
-    burstStars(W / 2, H * 0.4, 26);
-    burstConfetti(W / 2, H * 0.4, 30);
-    burstHearts(W / 2, H * 0.4, 10);
+    burstStars(W / 2, H * 0.42, 18);
+    burstConfetti(W / 2, H * 0.42, 22);
+    burstHearts(W / 2, H * 0.42, 8);
+    later(function () {
+      wishStage.classList.remove('done-flash');
+      wishStage.classList.add('blazing');
+      burstStars(W / 2, H * 0.42, 26);
+      burstDot(W / 2, H * 0.42, 20, ['#ffe28a', '#fff3c4', '#ffd9f2']);
+    }, 520);
     later(function () {
       if (holdArea) holdArea.hidden = true;
-      if (wishInput) { wishInput.hidden = true; }
+      if (wishInput) wishInput.hidden = true;
       var lab = $('.wish-input-wrap');
       if (lab) lab.hidden = true;
       if (wishSentBlock) wishSentBlock.hidden = false;
-    }, 500);
+    }, 900);
   }
 
   function initWishScene() {
-    wishStage.classList.remove('blazing');
+    wishStage.classList.remove('blazing', 'done-flash', 'holding');
     wishStage.classList.add('warm');
     wishComplete = false;
     holdStop();
@@ -990,7 +1177,7 @@
     if (!giftRow) return;
     $$('.gift-box', giftRow).forEach(function (b) {
       b.disabled = false;
-      b.classList.remove('selected');
+      b.classList.remove('selected', 'dimmed');
     });
     giftNote.hidden = true;
   }
@@ -998,23 +1185,28 @@
   function pickGift(box) {
     var value = box.getAttribute('data-value');
     state.gift = value;
-    $$('.gift-box').forEach(function (b) { b.disabled = true; });
+    $$('.gift-box').forEach(function (b) {
+      b.disabled = true;
+      if (b !== box) b.classList.add('dimmed');
+    });
     box.classList.add('selected');
     giftNote.hidden = false;
     SFX.select();
     var r = box.getBoundingClientRect();
     burstStars(r.left + r.width / 2, r.top + r.height / 2, 12);
-    later(function () { showScene('reveal'); initRevealScene(); }, 1500);
+    burstDot(r.left + r.width / 2, r.top + r.height / 2, 14, ['#ffd26e', '#ff8ed0', '#fff3c4']);
+    later(function () { showScene('reveal'); initRevealScene(); }, 1800);
   }
 
   /* ---------------- Gift reveal (scene 10) ---------------- */
   var revealBox = $('#reveal-box');
   var revealEmoji = $('#reveal-emoji');
   var revealMsg = $('#reveal-msg');
+  var revealVeil = $('#reveal-veil');
 
   function initRevealScene() {
+    if (revealVeil) { revealVeil.classList.remove('on'); void revealVeil.offsetWidth; }
     if (state.revealDone) {
-      // already revealed once this run; show result text instantly
       revealMsg.hidden = false;
       return;
     }
@@ -1026,19 +1218,32 @@
     later(function () {
       revealBox.classList.add('open');
       SFX.whoosh();
-      later(function () {
-        SFX.gift();
-        var r = revealBox.getBoundingClientRect();
-        burstStars(r.left + r.width / 2, r.top + r.height / 2, 30);
-        burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 40);
-        burstHearts(r.left + r.width / 2, r.top + r.height / 2, 14);
-      }, 400);
-    }, 500);
+    }, 450);
     later(function () {
+      SFX.gift();
+      var r = revealBox.getBoundingClientRect();
+      burstStars(r.left + r.width / 2, r.top + r.height / 2, 30);
+      burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 40);
+      burstHearts(r.left + r.width / 2, r.top + r.height / 2, 14);
+    }, 850);
+    later(function () {
+      if (revealVeil) revealVeil.classList.add('on');
+    }, 1250);
+    later(function () {
+      burstDot(W / 2, H * 0.42, 16, ['#ffe28a', '#ffd9a0', '#fff3c4']);
+    }, 1600);
+    later(function () {
+      burstDot(W / 2, H * 0.42, 22, ['#ffe28a', '#ffffff', '#ffd26e']);
+      burstStars(W / 2, H * 0.42, 20);
+    }, 2100);
+    later(function () {
+      if (revealVeil) revealVeil.classList.remove('on');
       revealMsg.hidden = false;
       SFX.chime();
       confettiCannon();
-    }, 1600);
+      burstStars(W / 2, H * 0.42, 30);
+      burstDot(W / 2, H * 0.42, 24, ['#ffd9f2', '#c9d9ff', '#ffe28a']);
+    }, 2650);
   }
 
   /* ---------------- Celebration (scene 11) ---------------- */
@@ -1164,22 +1369,26 @@
     syncSelectionUI();
     renderCake(builderPreview);
     renderCake(decorPreview);
+    if (builderPreview) builderPreview.classList.remove('staged');
+    if (decorPreview) decorPreview.classList.remove('staged');
     refreshDecorCount();
     candleBtn.disabled = true;
 
     // door
     var doorStage = $('#door-stage');
-    if (doorStage) doorStage.classList.remove('opening');
+    if (doorStage) doorStage.classList.remove('opening', 'zoom');
+    if (doorStage) doorStage.style.transform = '';
     var doorBtn = $('#door-open-btn');
     if (doorBtn) doorBtn.disabled = false;
 
     // candle ceremony
     candleStage.classList.remove('dim');
+    candleStage.style.setProperty('--lit', '0');
     candlePre.hidden = false;
     candleDone.hidden = true;
 
     // wish UI
-    wishStage.classList.remove('warm', 'blazing');
+    wishStage.classList.remove('warm', 'blazing', 'done-flash', 'holding');
     if (holdArea) holdArea.hidden = false;
     var lab = $('.wish-input-wrap');
     if (lab) lab.hidden = false;
@@ -1189,8 +1398,9 @@
     holdStop();
 
     // gifts + reveal
-    $$('.gift-box').forEach(function (b) { b.disabled = false; b.classList.remove('selected'); });
+    $$('.gift-box').forEach(function (b) { b.disabled = false; b.classList.remove('selected', 'dimmed'); });
     giftNote.hidden = true;
+    if (revealVeil) { revealVeil.classList.remove('on'); }
     if (revealBox) {
       revealBox.classList.remove('open');
       if (revealEmoji) revealEmoji.textContent = '🎁';
@@ -1281,23 +1491,35 @@
     if (gateError) gateError.hidden = true;
     SFX.chime();
     document.body.classList.remove('locked');
+    burstStars(W / 2, H * 0.45, 26);
+    burstDot(W / 2, H * 0.45, 34, ['#ffe28a', '#fff3c4', '#ffd9f2', '#c9d9ff']);
+    burstConfetti(W / 2, H * 0.45, 12);
     if (gate) {
       gate.classList.add('leaving');
       gate.setAttribute('aria-hidden', 'true');
       later(function () {
         if (gate) gate.hidden = true;
         if (gateInput) gateInput.value = '';
+      }, 1150);
+      later(function () {
         var openBtn = $('#open-btn');
         if (openBtn) openBtn.focus();
-      }, 750);
+      }, 1200);
     }
   }
 
   function initGate() {
     buildStars($('#gate-stars'));
+    buildFloaters();
     if (!gate || !gateInput || !gateUnlock) {
       document.body.classList.remove('locked');
       return;
+    }
+    if (!reduceMotion) {
+      later(function () {
+        var it = $('#gate-intro');
+        if (it) it.classList.add('done');
+      }, 2000);
     }
     gateUnlock.addEventListener('click', tryUnlock);
     gateInput.addEventListener('keydown', function (e) {
@@ -1325,6 +1547,7 @@
     Music.init();
     buildStars($('#stars'));
     buildBalloons();
+    buildPetals();
 
     // delegation for option buttons (builder + decoration)
     document.addEventListener('click', function (ev) {
@@ -1365,10 +1588,13 @@
       burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 30);
       $('#door-open-btn').disabled = true;
       later(function () {
-        showScene('cake');
-        initBuilder();
-        $('#door-open-btn').disabled = false;
-      }, 1500);
+        stage.classList.add('zoom');
+        later(function () {
+          showScene('cake');
+          initBuilder();
+          $('#door-open-btn').disabled = false;
+        }, 600);
+      }, 900);
     });
 
     // S5 builder next
@@ -1376,6 +1602,7 @@
       if (state.builderStep === 2) {
         showScene('decor');
         renderCake(decorPreview);
+        stageCake(decorPreview);
         refreshDecorCount();
         candleBtn.disabled = !(state.candles > 0);
       } else if (state.builderStep < 2) {
