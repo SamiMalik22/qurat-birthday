@@ -91,13 +91,18 @@
       </div>
     </section>
 
-    <!-- ============ SCENE 3 — COUNTDOWN ============ -->
+    <!-- ============ SCENE 3 — COUNTDOWN (REAL TIME LOCK) ============ -->
     <section id="scene-countdown" class="scene">
-      <div class="scene-inner">
-        <h2 class="scene-title">Countdown to the Big Day&nbsp;🎂</h2>
-        <p class="date-line">25 September 2026</p>
+      <div class="scene-inner countdown-inner" id="countdown-stage">
+        <div class="cd-orb" aria-hidden="true"></div>
+        <div class="cd-const" aria-hidden="true"></div>
+
+        <h2 class="scene-title">Countdown to the Big Day ✨</h2>
+        <p class="cd-eyebrow">QURAT UL AIN · 25 SEPTEMBER 2026</p>
 
         <div id="cd-wrap">
+          <p id="cd-slogan" class="cd-slogan">Something beautiful is waiting for you…</p>
+          <p id="cd-begins" class="cd-begins">Your birthday moment begins in</p>
           <div class="countdown-card">
             <div class="cd-units">
               <div class="cd-unit"><span class="cd-num" id="cd-days">00</span><span class="cd-label">DAYS</span></div>
@@ -109,16 +114,15 @@
               <div class="cd-unit"><span class="cd-num" id="cd-secs">00</span><span class="cd-label">SECONDS</span></div>
             </div>
           </div>
-          <p id="cd-slogan" class="cd-slogan">Your special day is getting closer...&nbsp;✨</p>
-          <p id="cd-byline" class="cd-byline">Get ready...</p>
+          <p id="cd-byline" class="cd-byline">25 September 2026 · 00:00 PKT</p>
+          <p id="cd-lock-note" class="cd-lock">🔒 The experience continues the moment this reaches zero.</p>
         </div>
 
         <div id="bd-reveal" hidden>
-          <h2 class="bd-headline">IT'S YOUR BIRTHDAY!&nbsp;🎉🎂</h2>
-          <p class="today-line">THE DAY HAS ARRIVED.</p>
+          <p class="cd-kicker">IT'S TIME ✨</p>
+          <p class="cd-arrived">Your birthday moment has arrived, Qurat Ul Ain. 🌷</p>
+          <button class="btn btn-warm cd-open" id="make-cake-btn" data-music="1" disabled>OPEN THE DOOR 🚪✨</button>
         </div>
-
-        <button class="btn btn-primary" id="make-cake-btn" data-music="1">START MY BIRTHDAY 🎂</button>
       </div>
     </section>
 

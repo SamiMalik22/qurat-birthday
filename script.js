@@ -19,7 +19,9 @@
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
   /* ---------------- State ---------------- */
-  var TARGET = new Date(2026, 8, 25, 0, 0, 0); // 25 Sep 2026, local time
+  // 25 Sep 2026 00:00:00 PKT (UTC+05:00) = 2026-09-24 19:00:00 UTC
+  var TARGET = Date.UTC(2026, 8, 24, 19, 0, 0);
+  var TARGET_LABEL = '25 September 2026 · 00:00 PKT';
 
   var DEFAULTS = {
     base: 'vanilla',
@@ -45,8 +47,7 @@
     wishText: '',
     gift: null,
     revealDone: false,
-    surpriseShown: false,
-    birthday: false
+    surpriseShown: false
   };
 
   var timers = [];
@@ -204,6 +205,7 @@
   };
 
   var MUSIC_LEVELS = {
+    countdown: 0.12,
     wish: 0.12,
     reveal: 0.3,
     celebration: 0.28,
@@ -225,6 +227,11 @@
   }
 
   function showScene(id) {
+    if (!countdownCanEnter(id)) {
+      SFX.tone(170, 0.16, 'sine', 0.035);
+      return;
+    }
+    if (id === 'countdown') initCountdownScene();
     state.scene = id;
     SCENES.forEach(function (key) {
       var el = sceneEls[key];
@@ -254,7 +261,7 @@
   var REVEAL_SELECTORS = {
     opening: '.opening-line, .btn-start',
     intro: '.intro-line, #scene-intro .btn',
-    countdown: '.scene-title, .date-line, .cd-slogan, .cd-byline, .today-line, .bd-headline',
+    countdown: '.scene-title, .cd-eyebrow, #cd-slogan, #cd-begins, .cd-byline, .cd-lock, .cd-kicker, .cd-arrived, .cd-open',
     door: '.ghost-line, #door-open-btn, .door-stage',
     cake: '.scene-title, .subtitle, .step',
     decor: '.scene-title, .subtitle, .decor-section, .decor-actions',
@@ -500,6 +507,19 @@
     });
   }
 
+  function spawnShootingStar() {
+    spawn({
+      type: 'shoot',
+      x: W * 0.2 + Math.random() * W * 0.6,
+      y: Math.random() * H * 0.5,
+      vx: -(Math.random() * 4 + 2.5),
+      vy: Math.random() * 1.4 + 1,
+      size: Math.random() * 1.6 + 1,
+      life: 0.9, max: 0.9,
+      color: '#fff3c4'
+    });
+  }
+
   function firework(x, y) {
     var colors = ['#ffe28a', '#ff8ed0', '#b5a0ff', '#7fd8ff', '#ff6f91'];
     for (var i = 0; i < 26; i++) {
@@ -581,6 +601,20 @@
           ctx.ellipse(0, 0, p.size, p.size * 0.62, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
+        } else if (p.type === 'shoot') {
+          ctx.strokeStyle = p.color;
+          ctx.globalAlpha = k * 0.75;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-p.vx * 0.5, -p.vy * 0.5);
+          ctx.stroke();
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = k;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         } else {
           ctx.fillStyle = p.color;
           ctx.beginPath();
@@ -601,7 +635,13 @@
     }
     if (reduceMotion) return;
     var sparkColors = ['#fff3c4', '#ffd9f2', '#c9d9ff'];
-    if (sceneId === 'countdown' || sceneId === 'intro') {
+    if (sceneId === 'countdown') {
+      ambientClear.calls.push(setInterval(function () { petalSpawn(); }, 900));
+      ambientClear.calls.push(setInterval(function () {
+        burstDot(Math.random() * W, H + 6, 1, sparkColors);
+      }, 640));
+      ambientClear.calls.push(setInterval(function () { spawnShootingStar(); }, 2600));
+    } else if (sceneId === 'intro') {
       ambientClear.calls.push(setInterval(function () {
         burstDot(Math.random() * W, H + 6, 1, sparkColors);
       }, 600));
@@ -646,29 +686,39 @@
     }
   }
 
-  /* ---------------- Countdown ---------------- */
+  /* ---------------- Countdown — real hard lock ---------------- */
   var cdWrap = $('#cd-wrap');
   var cdDays = $('#cd-days');
   var cdHours = $('#cd-hours');
   var cdMins = $('#cd-mins');
   var cdSecs = $('#cd-secs');
-  var cdByline = $('#cd-byline');
+  var cdStage = $('#countdown-stage');
   var bdReveal = $('#bd-reveal');
-  var last = { d: -1, h: -1, m: -1, s: -1 };
+  var makeCakeBtn = $('#make-cake-btn');
+  var last = { d: -1, h: -1, m: -1, s: -1, bylineDay: -1 };
 
-  function isBirthday() {
-    return Date.now() >= TARGET.getTime();
+  var countdownState = 'locked'; // 'locked' | 'unlocking' | 'unlocked'
+  var cdInitiated = false;
+
+  function getRemainingUntilBirthday() {
+    return Math.max(0, TARGET - Date.now());
+  }
+
+  // Central navigation guard: everything after the countdown scene stays
+  // locked until the countdown has genuinely reached zero.
+  function countdownCanEnter(id) {
+    if (countdownState === 'unlocked') return true;
+    if (id === 'countdown') return true;
+    return SCENES.indexOf(id) <= SCENES.indexOf('countdown');
+  }
+
+  function setLockUI(unlocked) {
+    if (makeCakeBtn) makeCakeBtn.disabled = !unlocked;
   }
 
   function updateCountdown() {
-    state.birthday = isBirthday();
-    if (state.birthday) {
-      cdWrap.hidden = true;
-      bdReveal.hidden = false;
-      return;
-    }
-    var now = Date.now();
-    var diff = Math.max(0, TARGET.getTime() - now);
+    if (countdownState === 'unlocked') return;
+    var diff = getRemainingUntilBirthday();
     var secs = Math.floor(diff / 1000);
     var d = Math.floor(secs / 86400);
     var h = Math.floor((secs % 86400) / 3600);
@@ -678,12 +728,77 @@
     if (h !== last.h) { cdHours.textContent = pad(h); bump(cdHours); last.h = h; }
     if (m !== last.m) { cdMins.textContent = pad(m); bump(cdMins); last.m = m; }
     if (s !== last.s) { cdSecs.textContent = pad(s); last.s = s; }
-    if (d >= 1 && state.bylineDay !== d) {
-      state.bylineDay = d;
-      cdByline.textContent = 'Only ' + d + (d === 1 ? ' day left...' : ' days left...');
-    } else if (d === 0 && cdByline.textContent.indexOf('Only') !== -1) {
-      cdByline.textContent = 'Get ready...';
+  }
+
+  function checkCountdownUnlock() {
+    if (countdownState !== 'locked') return;
+    if (getRemainingUntilBirthday() <= 0) startCountdownUnlock();
+  }
+
+  function startCountdownUnlock() {
+    if (countdownState !== 'locked') return;
+    countdownState = 'unlocking';
+    SFX.chime();
+    if (cdStage) cdStage.classList.add('cd-unlocking');
+    if (reduceMotion) {
+      finishCountdownUnlock();
+      return;
     }
+    var hx = W / 2, hy = H * 0.42;
+    for (var i = 0; i < 16; i++) {
+      spawn({
+        type: 'star',
+        x: Math.random() * W,
+        y: Math.random() * H * 0.85,
+        vx: 0, vy: 0,
+        inward: true, tx: hx, ty: hy,
+        size: Math.random() * 5 + 3,
+        life: 1.5 + Math.random() * 0.4, max: 2,
+        color: ['#ffe28a', '#ffd9f2', '#c9d9ff', '#fff3c4'][i % 4]
+      });
+    }
+    later(function () {
+      burstStars(hx, hy, 20);
+      burstDot(hx, hy, 24, ['#ffe28a', '#ffffff', '#ffd26e', '#ffd9f2']);
+    }, 820);
+    later(finishCountdownUnlock, 2400);
+  }
+
+  function finishCountdownUnlock() {
+    if (countdownState === 'unlocked') return;
+    countdownState = 'unlocked';
+    if (cdStage) cdStage.classList.remove('cd-unlocking');
+    if (cdWrap) cdWrap.hidden = true;
+    if (bdReveal) bdReveal.hidden = false;
+    setLockUI(true);
+    SFX.chime();
+    var hx = W / 2, hy = H * 0.45;
+    burstStars(hx, hy, 26);
+    burstConfetti(hx, hy, 18);
+    burstDot(hx, hy, 26, ['#ffe28a', '#ffd9f2', '#c9d9ff', '#fff3c4']);
+    firework(W * 0.28, H * 0.3);
+    firework(W * 0.72, H * 0.26);
+    var b = makeCakeBtn;
+    if (b) b.focus();
+  }
+
+  function initCountdownScene() {
+    if (!cdInitiated) {
+      cdInitiated = true;
+    }
+    if (countdownState === 'unlocked') {
+      if (cdWrap) cdWrap.hidden = true;
+      if (bdReveal) bdReveal.hidden = false;
+      setLockUI(true);
+      return;
+    }
+    setLockUI(false);
+    updateCountdown();
+  }
+
+  function tick() {
+    updateCountdown();
+    checkCountdownUnlock();
   }
 
   function bump(el) {
@@ -1411,12 +1526,16 @@
     surpriseReveal.classList.remove('show');
     surpriseReveal.setAttribute('aria-hidden', 'true');
 
-    // countdown visuals
+    // countdown visuals — re-lock unless the real target has already passed
+    countdownState = 'locked';
     cdWrap.hidden = false;
     bdReveal.hidden = true;
-    last = { d: -1, h: -1, m: -1, s: -1 };
-    delete state.bylineDay;
+    if (cdStage) cdStage.classList.remove('cd-unlocking');
+    setLockUI(false);
+    cdInitiated = false;
+    last = { d: -1, h: -1, m: -1, s: -1, bylineDay: -1 };
     updateCountdown();
+    checkCountdownUnlock();
 
     // particles
     particles = [];
@@ -1726,8 +1845,8 @@
       mBtn.addEventListener('click', function () { Music.toggle(); });
     }
 
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
+    setInterval(tick, 1000);
+    tick();
 
     showScene('opening');
   }

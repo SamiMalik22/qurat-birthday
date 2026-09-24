@@ -1776,3 +1776,193 @@ body.reduced .final-msg { animation: none; opacity: 1; }
   #wish-orb { width: 48px; height: 48px; }
   #wish-orb .wo-flame { display: none; }
 }
+
+/* ============================================================
+   COUNTDOWN CINEMATIC LAYER — real midnight countdown lock
+   (appended so these rules win over earlier layers)
+   ============================================================ */
+
+/* Midnight backdrop + aurora glows for the countdown scene */
+#scene-countdown {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(124, 77, 255, 0.3), transparent 60%),
+    radial-gradient(90% 80% at 85% 95%, rgba(255, 92, 176, 0.18), transparent 55%),
+    radial-gradient(80% 70% at 12% 88%, rgba(80, 190, 255, 0.18), transparent 55%),
+    linear-gradient(180deg, #070312 0%, #120a2e 55%, #1a0b2f 100%);
+}
+#scene-countdown .scene-inner { position: relative; z-index: 2; }
+
+/* soft vignette over the scene */
+#countdown-stage::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(2, 0, 12, 0.55) 100%);
+}
+
+/* breathing golden orb */
+.cd-orb {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  left: 50%;
+  top: 33%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle at 38% 34%, rgba(255, 255, 255, 0.85), rgba(255, 200, 130, 0.55) 28%, rgba(255, 120, 190, 0.32) 55%, transparent 72%);
+  filter: blur(46px);
+  opacity: 0.55;
+  animation: cdOrbBreathe 7s ease-in-out infinite;
+  z-index: 0;
+}
+@keyframes cdOrbBreathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);   opacity: 0.5; }
+  50%      { transform: translate(-50%, -50%) scale(1.14); opacity: 0.72; }
+}
+
+/* constellation of tiny twinkling stars */
+.cd-const {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 22%, rgba(255, 240, 200, 0.9), transparent 60%),
+    radial-gradient(1.2px 1.2px at 32% 68%, rgba(255, 200, 225, 0.9), transparent 60%),
+    radial-gradient(1.6px 1.6px at 74% 18%, rgba(190, 215, 255, 0.9), transparent 60%),
+    radial-gradient(1.1px 1.1px at 88% 58%, rgba(255, 226, 138, 0.85), transparent 60%),
+    radial-gradient(1.4px 1.4px at 52% 86%, rgba(255, 168, 215, 0.8), transparent 60%),
+    radial-gradient(1.1px 1.1px at 22% 90%, rgba(190, 235, 255, 0.85), transparent 60%),
+    radial-gradient(1.3px 1.3px at 62% 34%, rgba(255, 244, 196, 0.9), transparent 60%),
+    radial-gradient(1.1px 1.1px at 42% 6%, rgba(255, 255, 255, 0.8), transparent 60%);
+  animation: cdConstTwinkle 5s ease-in-out infinite alternate;
+}
+@keyframes cdConstTwinkle {
+  0%   { opacity: 0.55; }
+  100% { opacity: 0.95; }
+}
+
+/* eyebrow kicker */
+.cd-eyebrow {
+  font-size: clamp(0.66rem, 2.4vw, 0.82rem);
+  letter-spacing: 4px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #ffd26e, #ff8ed0, #c9d9ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 24px rgba(255, 180, 220, 0.35);
+  margin-bottom: 6px;
+}
+
+.cd-begins { color: #d9cfff; font-size: clamp(0.82rem, 3vw, 0.98rem); letter-spacing: 1.5px; }
+
+/* glowing slogan */
+#cd-slogan {
+  background: linear-gradient(90deg, #fff3c4, #ffd9f2, #c9d9ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 30px rgba(255, 200, 230, 0.4);
+  font-weight: 700;
+}
+
+/* glass panel upgrade + bigger elegant numerals */
+#scene-countdown .countdown-card {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.55),
+    0 0 46px rgba(160, 120, 255, 0.28) inset,
+    0 0 70px rgba(255, 120, 200, 0.12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+#scene-countdown .cd-num {
+  font-size: clamp(2rem, 8vw, 3.4rem);
+  font-weight: 800;
+  text-shadow:
+    0 0 22px rgba(200, 160, 255, 0.85),
+    0 0 46px rgba(255, 140, 210, 0.4);
+}
+#scene-countdown .cd-label { color: rgba(255, 255, 255, 0.66); }
+
+/* lock note pill */
+.cd-lock {
+  margin-top: 12px;
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: #cfc3ff;
+  background: rgba(190, 150, 255, 0.12);
+  border: 1px solid rgba(200, 170, 255, 0.28);
+  box-shadow: 0 0 24px rgba(160, 120, 255, 0.16);
+}
+
+/* ---------- unlocking state ---------- */
+.cd-unlocking #cd-wrap {
+  animation: cdHoldBreath 1.6s ease-in-out infinite;
+}
+.cd-unlocking .cd-num {
+  opacity: 0.75;
+  text-shadow: 0 0 26px rgba(255, 226, 138, 0.9);
+}
+@keyframes cdHoldBreath {
+  0%, 100% { transform: scale(1);   filter: brightness(1.05); }
+  50%      { transform: scale(1.04); filter: brightness(1.35); }
+}
+
+/* ---------- birthday arrival block ---------- */
+#bd-reveal { text-align: center; }
+#bd-reveal .cd-kicker {
+  opacity: 0;
+  font-size: clamp(0.72rem, 2.6vw, 0.9rem);
+  letter-spacing: 5px;
+  font-weight: 900;
+  color: #ffe9b0;
+  text-shadow: 0 0 26px rgba(255, 210, 110, 0.9);
+  animation: cdReveal 0.9s 0.1s both;
+}
+#bd-reveal .cd-arrived {
+  opacity: 0;
+  font-size: clamp(1.15rem, 4.6vw, 1.7rem);
+  font-weight: 800;
+  color: #ffe8f7;
+  text-shadow: 0 0 28px rgba(255, 140, 210, 0.6);
+  max-width: 26ch;
+  margin: 10px auto 20px;
+  animation: cdReveal 0.9s 0.45s both;
+}
+#bd-reveal .cd-open {
+  opacity: 0;
+  animation: cdReveal 0.9s 0.8s both, btnWarmPulse 2.4s ease-in-out 1.8s infinite;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22) inset, 0 0 44px rgba(255, 170, 110, 0.6), 0 12px 34px rgba(255, 120, 70, 0.4);
+}
+@keyframes cdReveal {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); filter: blur(8px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* ---------- reduced motion ---------- */
+body.reduced #scene-countdown .cd-orb,
+body.reduced .cd-const,
+body.reduced #cd-slogan,
+body.reduced .cd-unlocking #cd-wrap,
+body.reduced #bd-reveal .cd-kicker,
+body.reduced #bd-reveal .cd-arrived,
+body.reduced #bd-reveal .cd-open { animation: none; opacity: 1; }
+body.reduced #countdown-stage::after { display: none; }
+
+/* ---------- small screens & short viewports ---------- */
+@media (max-width: 400px) {
+  #scene-countdown .cd-num { font-size: 1.9rem; }
+  #scene-countdown .cd-unit { min-width: 48px; }
+  .cd-orb { width: 150px; height: 150px; }
+}
+@media (max-height: 700px) {
+  .cd-orb { width: 130px; height: 130px; top: 26%; }
+  #scene-countdown .cd-num { font-size: 1.7rem; }
+}
